@@ -14,6 +14,7 @@ namespace DeckSwipe.CardModel.Import {
 		public ProtoAction rightAction;
 		public List<ProtoCardPrerequisite> cardPrerequisites;
 		public List<ProtoSpecialCardPrerequisite> specialCardPrerequisites;
+		public string chapter;
 
 		public ProtoCard() {}
 
@@ -24,7 +25,8 @@ namespace DeckSwipe.CardModel.Import {
 				ProtoAction leftAction,
 				ProtoAction rightAction,
 				List<ProtoCardPrerequisite> cardPrerequisites,
-				List<ProtoSpecialCardPrerequisite> specialCardPrerequisites) {
+				List<ProtoSpecialCardPrerequisite> specialCardPrerequisites,
+				string chapter) {
 			this.id = id;
 			this.characterId = characterId;
 			this.cardText = cardText;
@@ -32,6 +34,7 @@ namespace DeckSwipe.CardModel.Import {
 			this.rightAction = rightAction;
 			this.cardPrerequisites = cardPrerequisites;
 			this.specialCardPrerequisites = specialCardPrerequisites;
+			this.chapter = chapter;
 		}
 
 		public ProtoCard(

@@ -139,6 +139,7 @@ namespace DeckSwipe.CardModel.Import.Resource {
 			var cards = new List<ProtoCard>();
 			RowData[] cardRowData = cardSheet.data[0].rowData;
 			for (int i = 1; i < cardRowData.Length; i++) {
+				Debug.Log("Card Row: " + i);
 				int id = cardRowData[i].values[0].IntValue;
 				int characterId = cardRowData[i].values[1].IntValue;
 				string cardText = cardRowData[i].values[2].GetStringValue("");
@@ -146,7 +147,7 @@ namespace DeckSwipe.CardModel.Import.Resource {
 					id,
 					characterId,
 					cardText);
-
+				Debug.Log("Values " + i + ":" + cardRowData[i].values + ":" + cardRowData[i].values.Length);
 				proto.leftAction.text = cardRowData[i].values[3].GetStringValue("");
 				proto.leftAction.statsModification = new StatsModification(
 					cardRowData[i].values[4].IntValue,
@@ -160,6 +161,7 @@ namespace DeckSwipe.CardModel.Import.Resource {
 					cardRowData[i].values[11].IntValue,
 					cardRowData[i].values[12].IntValue);
 
+				Debug.Log("cardRowData["+ i+ "].values[13].StringValue" + cardRowData[i].values[13].StringValue);
 				var cardPrerequisites = JsonUtility.FromJson<JsonArray<ProtoCardPrerequisite>>(
 						cardRowData[i].values[13].StringValue);
 				var specialCardPrerequisites = JsonUtility.FromJson<JsonArray<ProtoSpecialCardPrerequisite>>(
@@ -203,6 +205,7 @@ namespace DeckSwipe.CardModel.Import.Resource {
 								cardRowData[i].values[18].IntValue));
 					}
 				}
+				proto.chapter = cardRowData[i].values[19].StringValue;
 
 				cards.Add(proto);
 			}
@@ -269,21 +272,22 @@ namespace DeckSwipe.CardModel.Import.Resource {
 					&& headerRow.values[1].StringValue == "characterId"
 					&& headerRow.values[2].StringValue == "cardText"
 					&& headerRow.values[3].StringValue == "leftActionText"
-					&& headerRow.values[4].StringValue == "leftActionCoal"
-					&& headerRow.values[5].StringValue == "leftActionFood"
-					&& headerRow.values[6].StringValue == "leftActionHealth"
-					&& headerRow.values[7].StringValue == "leftActionHope"
+					&& headerRow.values[4].StringValue == "leftActionPlayers"
+					&& headerRow.values[5].StringValue == "leftActionFans"
+					&& headerRow.values[6].StringValue == "leftActionAdmins"
+					&& headerRow.values[7].StringValue == "leftActionFinance"
 					&& headerRow.values[8].StringValue == "rightActionText"
-					&& headerRow.values[9].StringValue == "rightActionCoal"
-					&& headerRow.values[10].StringValue == "rightActionFood"
-					&& headerRow.values[11].StringValue == "rightActionHealth"
-					&& headerRow.values[12].StringValue == "rightActionHope"
+					&& headerRow.values[9].StringValue == "rightActionPlayers"
+					&& headerRow.values[10].StringValue == "rightActionFans"
+					&& headerRow.values[11].StringValue == "rightActionAdmins"
+					&& headerRow.values[12].StringValue == "rightActionFinance"
 					&& headerRow.values[13].StringValue == "cardPrerequisites"
 					&& headerRow.values[14].StringValue == "specialCardPrerequisites"
 					&& headerRow.values[15].StringValue == "leftActionFollowupCardId"
 					&& headerRow.values[16].StringValue == "leftActionFollowupCardDelay"
 					&& headerRow.values[17].StringValue == "rightActionFollowupCardId"
-					&& headerRow.values[18].StringValue == "rightActionFollowupCardDelay") {
+					&& headerRow.values[18].StringValue == "rightActionFollowupCardDelay"
+					&& headerRow.values[19].StringValue == "chapter") {
 				return true;
 			}
 			Debug.LogError("[GoogleSheetsCollection] Invalid card format encountered in "
