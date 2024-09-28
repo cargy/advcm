@@ -1,6 +1,8 @@
 using System;
 ﻿using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using DeckSwipe.CardModel.DrawQueue;
@@ -13,7 +15,7 @@ namespace DeckSwipe.CardModel.Import.Resource {
 
 	public class GoogleSheetsCollection {
 
-		private const int _majorFormatVersion = 4;
+		private const int _majorFormatVersion = 5;
 		private const int _minorFormatVersion = 0;
 
 		private GoogleSheetsConfig config;
@@ -138,34 +140,36 @@ namespace DeckSwipe.CardModel.Import.Resource {
 			// Parse Cards sheet
 			var cards = new List<ProtoCard>();
 			RowData[] cardRowData = cardSheet.data[0].rowData;
-			for (int i = 1; i < cardRowData.Length; i++) {
-				Debug.Log("Card Row: " + i);
+			for (int i = 1; i < cardRowData.Length - 1; i++) {
+				Debug.Log("Card Row: " + i + "/" + cardRowData.Length);
 				int id = cardRowData[i].values[0].IntValue;
 				int characterId = cardRowData[i].values[1].IntValue;
 				string cardText = cardRowData[i].values[2].GetStringValue("");
+				Debug.Log("Index:" + i + ", id: " + id + ", cardText:" + cardText);
+				string chapter = cardRowData[i].values[3].StringValue;
 				ProtoCard proto = new ProtoCard(
 					id,
 					characterId,
-					cardText);
-				Debug.Log("Values " + i + ":" + cardRowData[i].values + ":" + cardRowData[i].values.Length);
-				proto.leftAction.text = cardRowData[i].values[3].GetStringValue("");
+					cardText,
+					chapter);
+				proto.leftAction.text = cardRowData[i].values[4].GetStringValue("");
 				proto.leftAction.statsModification = new StatsModification(
-					cardRowData[i].values[4].IntValue,
 					cardRowData[i].values[5].IntValue,
 					cardRowData[i].values[6].IntValue,
-					cardRowData[i].values[7].IntValue);
-				proto.rightAction.text = cardRowData[i].values[8].GetStringValue("");
+					cardRowData[i].values[7].IntValue,
+					cardRowData[i].values[8].IntValue);
+				proto.rightAction.text = cardRowData[i].values[9].GetStringValue("");
 				proto.rightAction.statsModification = new StatsModification(
-					cardRowData[i].values[9].IntValue,
 					cardRowData[i].values[10].IntValue,
 					cardRowData[i].values[11].IntValue,
-					cardRowData[i].values[12].IntValue);
+					cardRowData[i].values[12].IntValue,
+					cardRowData[i].values[13].IntValue);
 
-				Debug.Log("cardRowData["+ i+ "].values[13].StringValue" + cardRowData[i].values[13].StringValue);
+				Debug.Log("cardRowData["+ i+ "].values[14].StringValue" + cardRowData[i].values[14].StringValue);
 				var cardPrerequisites = JsonUtility.FromJson<JsonArray<ProtoCardPrerequisite>>(
-						cardRowData[i].values[13].StringValue);
-				var specialCardPrerequisites = JsonUtility.FromJson<JsonArray<ProtoSpecialCardPrerequisite>>(
 						cardRowData[i].values[14].StringValue);
+				var specialCardPrerequisites = JsonUtility.FromJson<JsonArray<ProtoSpecialCardPrerequisite>>(
+						cardRowData[i].values[15].StringValue);
 
 				if (cardPrerequisites?.array != null) {
 					proto.cardPrerequisites =
@@ -181,31 +185,30 @@ namespace DeckSwipe.CardModel.Import.Resource {
 				proto.rightAction.followup = new List<Followup>();
 				proto.rightAction.specialFollowup = new List<SpecialFollowup>();
 
-				if (cardRowData[i].values[16].IntValue > 0) {
-					if (cardRowData[i].values[15].StringValue == null) {
+				if (cardRowData[i].values[17].IntValue > 0) {
+					if (cardRowData[i].values[16].StringValue == null) {
 						proto.leftAction.followup.Add(new Followup(
-								cardRowData[i].values[15].IntValue,
-								cardRowData[i].values[16].IntValue));
+								cardRowData[i].values[16].IntValue,
+								cardRowData[i].values[17].IntValue));
 					}
 					else {
 						proto.leftAction.specialFollowup.Add(new SpecialFollowup(
-								cardRowData[i].values[15].StringValue,
-								cardRowData[i].values[16].IntValue));
+								cardRowData[i].values[16].StringValue,
+								cardRowData[i].values[17].IntValue));
 					}
 				}
-				if (cardRowData[i].values[18].IntValue > 0) {
-					if (cardRowData[i].values[17].StringValue == null) {
+				if (cardRowData[i].values[19].IntValue > 0) {
+					if (cardRowData[i].values[18].StringValue == null) {
 						proto.rightAction.followup.Add(new Followup(
-								cardRowData[i].values[17].IntValue,
-								cardRowData[i].values[18].IntValue));
+								cardRowData[i].values[18].IntValue,
+								cardRowData[i].values[19].IntValue));
 					}
 					else {
 						proto.rightAction.specialFollowup.Add(new SpecialFollowup(
-								cardRowData[i].values[17].StringValue,
-								cardRowData[i].values[18].IntValue));
+								cardRowData[i].values[18].StringValue,
+								cardRowData[i].values[19].IntValue));
 					}
 				}
-				proto.chapter = cardRowData[i].values[19].StringValue;
 
 				cards.Add(proto);
 			}
@@ -271,28 +274,29 @@ namespace DeckSwipe.CardModel.Import.Resource {
 			if (headerRow.values[0].StringValue == "id"
 					&& headerRow.values[1].StringValue == "characterId"
 					&& headerRow.values[2].StringValue == "cardText"
-					&& headerRow.values[3].StringValue == "leftActionText"
-					&& headerRow.values[4].StringValue == "leftActionPlayers"
-					&& headerRow.values[5].StringValue == "leftActionFans"
-					&& headerRow.values[6].StringValue == "leftActionAdmins"
-					&& headerRow.values[7].StringValue == "leftActionFinance"
-					&& headerRow.values[8].StringValue == "rightActionText"
-					&& headerRow.values[9].StringValue == "rightActionPlayers"
-					&& headerRow.values[10].StringValue == "rightActionFans"
-					&& headerRow.values[11].StringValue == "rightActionAdmins"
-					&& headerRow.values[12].StringValue == "rightActionFinance"
-					&& headerRow.values[13].StringValue == "cardPrerequisites"
-					&& headerRow.values[14].StringValue == "specialCardPrerequisites"
-					&& headerRow.values[15].StringValue == "leftActionFollowupCardId"
-					&& headerRow.values[16].StringValue == "leftActionFollowupCardDelay"
-					&& headerRow.values[17].StringValue == "rightActionFollowupCardId"
-					&& headerRow.values[18].StringValue == "rightActionFollowupCardDelay"
-					&& headerRow.values[19].StringValue == "chapter") {
+					&& headerRow.values[3].StringValue == "chapter"
+					&& headerRow.values[4].StringValue == "leftActionText"
+					&& headerRow.values[5].StringValue == "leftActionPlayers"
+					&& headerRow.values[6].StringValue == "leftActionFans"
+					&& headerRow.values[7].StringValue == "leftActionAdmins"
+					&& headerRow.values[8].StringValue == "leftActionFinance"
+					&& headerRow.values[9].StringValue == "rightActionText"
+					&& headerRow.values[10].StringValue == "rightActionPlayers"
+					&& headerRow.values[11].StringValue == "rightActionFans"
+					&& headerRow.values[12].StringValue == "rightActionAdmins"
+					&& headerRow.values[13].StringValue == "rightActionFinance"
+					&& headerRow.values[14].StringValue == "cardPrerequisites"
+					&& headerRow.values[15].StringValue == "specialCardPrerequisites"
+					&& headerRow.values[16].StringValue == "leftActionFollowupCardId"
+					&& headerRow.values[17].StringValue == "leftActionFollowupCardDelay"
+					&& headerRow.values[18].StringValue == "rightActionFollowupCardId"
+					&& headerRow.values[19].StringValue == "rightActionFollowupCardDelay") {
 				return true;
 			}
 			Debug.LogError("[GoogleSheetsCollection] Invalid card format encountered in "
 			               + sheet.properties.title
-			               + " sheet");
+			               + " sheet. "
+						   + string.Join(", ", headerRow.values.Select(row => row.StringValue)));
 			return false;
 		}
 
